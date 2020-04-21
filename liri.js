@@ -4,10 +4,14 @@ const _ = require('lodash'),
       axios = require('axios'),
       fs = require('fs'),
       moment = require('moment'),
+      Spotify = require('node-spotify-api'),
       keys = require('./keys.js'),
-      // spotify = new Spotify(keys.spotify),
+      spotify = new Spotify(keys.spotify),
       usrCmd = process.argv[2],
       searchTerms = process.argv.slice(3);
+
+// DEBUG:
+console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
 
 switch (usrCmd) {
   case 'concert-this':
@@ -18,8 +22,10 @@ switch (usrCmd) {
         artistProperName = '';
 
     _.forEach(searchTerms, (word) => {
-      artist += `${_.lowerCase(word)}+`;
-      artistProperName += _.upperFirst(word) + ' ';
+      let partialName = _.lowerCase(word);
+
+      artist += `${partialName}+`;
+      artistProperName += _.upperFirst(partialName) + ' ';
     });
 
     artist = _.trimEnd(artist, '+');
@@ -38,11 +44,11 @@ switch (usrCmd) {
 
         _.forEach(concertData, (concert) => {
           concertInfo.push(
-              '--------------------------------------------------\n' +
-              `Concert Venue: ${concert.venue.name}\n` +
-              `Venue Location: ${concert.venue.location}\n` +
-              `Concert Date: ${moment(concert.datetime).format('MM/DD/YYYY')}`
-            );
+            '--------------------------------------------------\n' +
+            `Concert Venue: ${concert.venue.name}\n` +
+            `Venue Location: ${concert.venue.location}\n` +
+            `Concert Date: ${moment(concert.datetime).format('MM/DD/YYYY')}`
+          );
         });
 
         let userMsg = '';
@@ -74,13 +80,31 @@ switch (usrCmd) {
 
     break;
   case 'movie-this':
-    console.log(`You want to ${usrCmd} for ${searchTerm.join(' ')}!`);
+    console.log('UNDER CONSTRUCTION');
     break;
   case 'spotify-this-song':
-    console.log(`You want to ${usrCmd} for ${searchTerm.join(' ')}!`);
+    // ASSERT: ...
+
+    // Format the name of the tune for query to Spotify API.
+    let tune = (searchTerms.length > 0) ? '' : 'The Sign';
+    
+    _.forEach(searchTerms, (word) => {
+      tune += `${_.capitalize(word)} `;
+    });
+
+    tune = _.trimEnd(tune, ' ');
+
+    spotify
+      .search({ type: 'track', query: tune })
+      .then((res) => {
+        // DEBUG:
+        console.log(res);
+      })
+      .catch(console.error);
+
     break;
   case 'do-what-it-says':
-    console.log(`You want to ${usrCmd} for ${searchTerm.join(' ')}!`);
+    console.log('UNDER CONSTRUCTION');
     break;
   default:
     console.log('BAD USER! Invalid command entered.');
