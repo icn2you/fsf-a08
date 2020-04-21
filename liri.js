@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const _ = require('lodash'),
       axios = require('axios'),
+      fs = require('fs'),
       moment = require('moment'),
       keys = require('./keys.js'),
       // spotify = new Spotify(keys.spotify),
@@ -44,13 +45,30 @@ switch (usrCmd) {
             );
         });
 
-        concertInfo.push('--------------------------------------------------');
+        let userMsg = '';
 
-        console.log(`${artistProperName} has the following concerts coming up:\n`);
+        if (concertInfo.length > 0) {
+          userMsg = `\n${artistProperName} has the following concerts coming up:\n`;
+          concertInfo.push('--------------------------------------------------\n');
+        }
+        else {
+          userMsg = `${artistProperName} has no concerts coming up. =[`
+        }
+
+        // Output result(s) to user.
+        console.log(userMsg);
 
         _.forEach(concertInfo, (concert) => {
           console.log(concert);
         })
+
+        // Output result(s) to log file.
+        fs.appendFile('log.txt', 
+          `\n${userMsg}\n${concertInfo.join('\n')}`, 
+          (err) => {
+          if (err)
+            console.error(err);
+        });
       })
       .catch(console.error);
 
