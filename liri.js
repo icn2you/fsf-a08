@@ -12,6 +12,22 @@ const _ = require('lodash'),
 
 let queryURL = '';
 
+// DEBUG:
+// console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
+
+/**************************************************************
+  logOutput()
+  - Append msg and data to specified file.
+ **************************************************************/
+function logOutput(file, msg, data) {
+  fs.appendFile(file, 
+    `\n${msg}\n${data}`, 
+    (err) => {
+    if (err)
+      console.error(err);
+  });
+}
+
 /**************************************************************
   concertThis()
   - Query concert data for specified artist.
@@ -69,12 +85,7 @@ function concertThis() {
       })
 
       // Output result(s) to log file.
-      fs.appendFile('log.txt', 
-        `\n${userMsg}\n${concertInfo.join('\n')}`, 
-        (err) => {
-        if (err)
-          console.error(err);
-      });
+      logOutput('log.txt', userMsg, concertInfo.join('\n'));   
     })
     .catch(console.error);
 }
@@ -158,12 +169,7 @@ function movieThis() {
               });
 
               // Output result(s) to log file.
-              fs.appendFile('log.txt', 
-                `\n${userMsg}\n${movieInfo.join('\n')}`, 
-                (err) => {
-                if (err)
-                  console.error(err);
-              });
+              logOutput('log.txt', userMsg, movieInfo.join('\n'));              
             }
           })
           .catch(console.error)       
@@ -222,18 +228,10 @@ function spotifyThis() {
       });
 
       // Output result(s) to log file.
-      fs.appendFile('log.txt', 
-        `\n${userMsg}\n${tunesInfo.join('\n')}`, 
-        (err) => {
-        if (err)
-          console.error(err);
-      });
+      logOutput('log.txt', userMsg, tunesInfo.join('\n'));   
     })
     .catch(console.error);
 }
-
-// DEBUG:
-// console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
 
 switch (usrCmd) {
   case 'concert-this':
