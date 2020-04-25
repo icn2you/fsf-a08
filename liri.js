@@ -12,7 +12,7 @@ let usrCmd = process.argv[2];
     searchTerms = process.argv.slice(3),
     queryURL = '';
 
-function executeUserCmd() {
+function execUserCmd() {
   switch (usrCmd) {
     case 'concert-this':
       // ASSERT: User wants to see concert info for a particular artist.
@@ -24,7 +24,7 @@ function executeUserCmd() {
       movieThis();
   
       break;
-    case 'spotify-this-song':
+    case 'spotify-this':
       // ASSERT: User wants details for a particular song/tune.
       spotifyThis();
   
@@ -39,7 +39,7 @@ function executeUserCmd() {
         usrCmd = fileInput[0];
         searchTerms = searchData.split(' ');
 
-        executeUserCmd(usrCmd);
+        execUserCmd(usrCmd);
       });
       break;
     default:
@@ -262,4 +262,4 @@ function spotifyThis() {
     .catch(console.error);
 }
 
-executeUserCmd();
+execUserCmd();
