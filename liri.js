@@ -229,7 +229,13 @@ switch (usrCmd) {
       .catch(console.error);
     break;
   case 'do-what-it-says':
-    console.log('UNDER CONSTRUCTION');
+    fs.readFile('random.txt', 'utf8', (err, data) => {
+      if (err) throw err;
+
+      let input = data.split(',');
+
+      console.log(input);
+    });
     break;
   default:
     console.log('BAD USER! Invalid command entered.');
