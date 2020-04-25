@@ -84,12 +84,10 @@ switch (usrCmd) {
   case 'movie-this':
     // ASSERT: User wants details for a particular movie.
 
-    // Set the maximum number of results to return
-    const numMovies = 25;
-
     // Format the name of the movie for query to OMDB API.
     let movie = (searchTerms.length > 0) ? '' : 'Mr.+Nobody',
-        movieProperName = '';
+        movieProperName = '',
+        movieInfo = [];
     
     _.forEach(searchTerms, (term) => {
       let partialName = _.capitalize(term);
@@ -101,92 +99,76 @@ switch (usrCmd) {
     movie = _.trimEnd(movie, '+');
     movieProperName = _.trimEnd(movieProperName, ' ');   
 
-    // Create query URL, and get data from Bandsintown
-    queryURL = `http://www.omdbapi.com/?apikey=trilogy&s=${movie}&type=movie&page=${numMovies}`;
+    // Create query URL, and get data from OMDb.
+    queryURL = `http://www.omdbapi.com/?apikey=trilogy&s=${movie}&type=movie`;
 
-    async function queryMovieDB() {
-      let movieInfo = [];
+    axios.get(queryURL)
+      .then((res) => {
+        // DEBUG:
+        // console.log(res);
 
-      await axios.get(queryURL)
-        .then((res) => {
-          // DEBUG:
-          // console.log(res);
-
-          const movieData = res.data.Search;        
-          // console.log(movieData);
-          
-          _.forEach(movieData, async (movie) => {
-            let movieIDQueryURL = `http://www.omdbapi.com/?apikey=trilogy&i=${movie.imdbID}`;
+        const movieData = res.data.Search;
+        let resCount = 0;
+        
+        // For each result returned in the first query, execute a second query
+        // to obtain the relevant movie details of that particular result.
+        _.forEach(movieData, (movie) => {
+          let movieIDQueryURL = `http://www.omdbapi.com/?apikey=trilogy&i=${movie.imdbID}`;
 
 
-            await axios.get(movieIDQueryURL)
-              .then((res) => {
-                // DEBUG:
-                // console.log(res);
+          axios.get(movieIDQueryURL)
+            .then((res) => {
+              // DEBUG:
+              // console.log(res);
 
-                let release = res.data;
+              let release = res.data;
 
-                console.log(release.Title);
+              movieInfo.push(
+                '--------------------------------------------------\n' +
+                `Movie Title: ${release.Title}\n` +
+                `Year Released: ${release.Year}\n` +
+                `IMDb Rating: ${release.imdbRating}\n` +
+                `Rotten Tomatoes Rating: ${release.Ratings}\n` +
+                `Production Country: ${release.Country}\n` +
+                `Primary Language: ${release.Language}\n` +
+                `Plot: ${release.Plot}\n` +
+                `Actors: ${release.Actors}`
+              );
 
-                movieInfo.push(
-                  '--------------------------------------------------\n' +
-                  `Movie Title: ${release.Title}\n` +
-                  `Year Released: ${release.Year}\n` +
-                  `IMDb Rating: ${release.imdbRating}\n` +
-                  `Rotten Tomatoes Rating: ${release.Ratings}\n` +
-                  `Production Country: ${release.Country}\n` +
-                  `Primary Language: ${release.Language}\n` +
-                  `Plot: ${release.Plot}\n` +
-                  `Actors: ${release.Actors}\n`
-                );
+              resCount++;
 
-                console.log(`movieInfo has ${movieInfo.length} elements.`);
+              // If the relevant details of all movies have been retrieved,
+              // output the result(s) to the UI. 
+              if (resCount === movieData.length) {
+                let userMsg = '';
+            
+                if (movieInfo.length > 0) {
+                  userMsg = `\nFollowing are ${resCount} releases for *${movieProperName}*:\n`;
+                  movieInfo.push('--------------------------------------------------\n');
+                }
+                else {
+                  userMsg = `I couldn't find any movies entitled *${movieProperName}*. =[`
+                }
+            
+                // Output result(s) to user.
+                console.log(userMsg);
+                
+                _.forEach(movieInfo, (movie) => {
+                  console.log(movie);
+                });
 
-              })
-              .catch(console.error)       
-          });
+                // Output result(s) to log file.
+                fs.appendFile('log.txt', 
+                  `\n${userMsg}\n${movieInfo.join('\n')}`, 
+                  (err) => {
+                  if (err)
+                    console.error(err);
+                });
+              }
+            })
+            .catch(console.error)       
         });
-
-      return movieInfo;
-    }
-
-    const movies = queryMovieDB();
-
-    console.log(`movieInfo has a total of ${movies.length} elements.`);
-
-    let userMsg = '';
-
-    if (movies.length > 0) {
-      userMsg = `\nFollowing are ${numMovies} releases for ${movieProperName}:\n`;
-      movieInfo.push('--------------------------------------------------\n');
-    }
-    else {
-      userMsg = `I couldn't find any movies entitled *${movieProperName}*. =[`
-    }
-
-    // Output result(s) to user.
-    console.log(userMsg);
-
-    _.forEach(movies, (movie) => {
-      console.log(movie);
-    });
-
-
-
-          /*
-
-        });
-
-        // Output result(s) to log file.
-        fs.appendFile('log.txt', 
-          `\n${userMsg}\n${concertInfo.join('\n')}`, 
-          (err) => {
-          if (err)
-            console.error(err);
-        });
-        */
-
-
+      });
     break;
   case 'spotify-this-song':
     // ASSERT: User wants details for a particular song/tune.
@@ -245,7 +227,6 @@ switch (usrCmd) {
         });
       })
       .catch(console.error);
-
     break;
   case 'do-what-it-says':
     console.log('UNDER CONSTRUCTION');
