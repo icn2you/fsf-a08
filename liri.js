@@ -12,6 +12,13 @@ let usrCmd = process.argv[2];
     searchTerms = process.argv.slice(3),
     queryURL = '';
 
+// DEBUG:
+// console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
+
+/**************************************************************
+  execUserCmd()
+  - Do what the user commands based on CLI/file input.
+ **************************************************************/
 function execUserCmd() {
   switch (usrCmd) {
     case 'concert-this':
@@ -46,9 +53,6 @@ function execUserCmd() {
       console.log('BAD USER! Invalid command entered.');
   };
 }
-
-// DEBUG:
-// console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
 
 /**************************************************************
   logOutputToFile()
@@ -132,6 +136,26 @@ function concertThis() {
 }
 
 /**************************************************************
+  outputMovieResults()
+  - movieThis() callback function
+ **************************************************************/
+function outputMovieResults(movies, movieCount, movieName) {
+  let userMsg = '';
+          
+  if (movies.length > 0) {
+    userMsg = `\nFollowing are ${movieCount} releases for *${movieName}*:\n`;
+    movies.push('--------------------------------------------------\n');
+  }
+  else {
+    userMsg = `I couldn't find any movies entitled *${movieName}*. =[`
+  }
+
+  outputResultsToUser(userMsg, movies);
+
+  logOutputToFile('log.txt', userMsg, movies.join('\n'));    
+}
+
+/**************************************************************
   movieThis()
   - Query relevant OMDb data for specified movie.
  **************************************************************/
@@ -190,21 +214,9 @@ function movieThis() {
             resCount++;
 
             // If the relevant details of all movies have been retrieved,
-            // output the result(s) to the UI. 
+            // output the result(s) to user. 
             if (resCount === movieData.length) {
-              let userMsg = '';
-          
-              if (movieInfo.length > 0) {
-                userMsg = `\nFollowing are ${resCount} releases for *${movieProperName}*:\n`;
-                movieInfo.push('--------------------------------------------------\n');
-              }
-              else {
-                userMsg = `I couldn't find any movies entitled *${movieProperName}*. =[`
-              }
-          
-              outputResultsToUser(userMsg, movieInfo);
-          
-              logOutputToFile('log.txt', userMsg, movieInfo.join('\n'));              
+              outputMovieResults(movieInfo, resCount, movieProperName);
             }
           })
           .catch(console.error)       
