@@ -6,11 +6,46 @@ const _ = require('lodash'),
       moment = require('moment'),
       Spotify = require('node-spotify-api'),
       keys = require('./keys.js'),
-      spotify = new Spotify(keys.spotify),
-      usrCmd = process.argv[2],
-      searchTerms = process.argv.slice(3);
+      spotify = new Spotify(keys.spotify);
 
-let queryURL = '';
+let usrCmd = process.argv[2];
+    searchTerms = process.argv.slice(3),
+    queryURL = '';
+
+function executeUserCmd() {
+  switch (usrCmd) {
+    case 'concert-this':
+      // ASSERT: User wants to see concert info for a particular artist.
+      concertThis();
+  
+      break;
+    case 'movie-this':
+      // ASSERT: User wants details for a particular movie.
+      movieThis();
+  
+      break;
+    case 'spotify-this-song':
+      // ASSERT: User wants details for a particular song/tune.
+      spotifyThis();
+  
+      break;
+    case 'do-what-it-says':
+      fs.readFile('random.txt', 'utf8', (err, data) => {
+        if (err) throw err;
+  
+        let fileInput = data.split(','),
+            searchData = _.trimStart(_.trimEnd(fileInput[1], '"'), '"');
+
+        usrCmd = fileInput[0];
+        searchTerms = searchData.split(' ');
+
+        executeUserCmd(usrCmd);
+      });
+      break;
+    default:
+      console.log('BAD USER! Invalid command entered.');
+  };
+}
 
 // DEBUG:
 // console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
@@ -227,31 +262,4 @@ function spotifyThis() {
     .catch(console.error);
 }
 
-switch (usrCmd) {
-  case 'concert-this':
-    // ASSERT: User wants to see concert info for a particular artist.
-    concertThis();
-
-    break;
-  case 'movie-this':
-    // ASSERT: User wants details for a particular movie.
-    movieThis();
-
-    break;
-  case 'spotify-this-song':
-    // ASSERT: User wants details for a particular song/tune.
-    spotifyThis();
-
-    break;
-  case 'do-what-it-says':
-    fs.readFile('random.txt', 'utf8', (err, data) => {
-      if (err) throw err;
-
-      let input = data.split(',');
-
-      console.log(input);
-    });
-    break;
-  default:
-    console.log('BAD USER! Invalid command entered.');
-};
+executeUserCmd();
