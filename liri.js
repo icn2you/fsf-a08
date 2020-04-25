@@ -115,11 +115,11 @@ switch (usrCmd) {
           const movieData = res.data.Search;        
           // console.log(movieData);
           
-          _.forEach(movieData, (movie) => {
+          _.forEach(movieData, async (movie) => {
             let movieIDQueryURL = `http://www.omdbapi.com/?apikey=trilogy&i=${movie.imdbID}`;
 
 
-            axios.get(movieIDQueryURL)
+            await axios.get(movieIDQueryURL)
               .then((res) => {
                 // DEBUG:
                 // console.log(res);
