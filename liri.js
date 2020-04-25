@@ -80,8 +80,8 @@ function concertThis() {
 }
 
 /**************************************************************
-  movie This()
-  - Query concert data for specified artist.
+  movieThis()
+  - Query relevant OMDb data for specified movie.
  **************************************************************/
 function movieThis() {
   // Format the name of the movie for query to OMDB API.
@@ -171,6 +171,67 @@ function movieThis() {
     });
 }
 
+/**************************************************************
+  spotifyThis()
+  - Query relevant Spotify data for specified song.
+ **************************************************************/
+function spotifyThis() {
+  // Format the name of the tune for query to Spotify API.
+  let tune = (searchTerms.length > 0) ? '' : 'The Sign';
+  
+  _.forEach(searchTerms, (word) => {
+    tune += `${_.capitalize(word)} `;
+  });
+
+  tune = _.trimEnd(tune, ' ');
+
+  spotify
+    .search({ type: 'track', query: tune })
+    .then((res) => {
+      // DEBUG:
+      // console.log(res);
+
+      const tunesData = res.tracks;
+      let tunesInfo = [];
+
+      _.forEach(tunesData.items, (song) => {
+        tunesInfo.push(
+          '----------------------------------------------------------------------\n' +
+          `Artist(s): ${song.artists[0].name}\n` +
+          `Song: ${song.name}\n` +
+          `Preview: ${song.preview_url}\n` +
+          `Album: ${song.album.name}`
+        );
+      });          
+
+      let userMsg = '';
+
+      if (tunesInfo.length > 0) {
+        userMsg = `\nFollowing are the matches Spotify found for "${tune}":\n`;
+        tunesInfo.push('----------------------------------------------------------------------\n');
+      }
+      else {
+        userMsg = `Spotify has no matches for "${tune}". =[`
+      }
+
+      // Output result(s) to user.
+      console.log(userMsg);
+
+      _.forEach(tunesInfo, (song) => {
+        console.log(song);
+      });
+
+      // Output result(s) to log file.
+      fs.appendFile('log.txt', 
+        `\n${userMsg}\n${tunesInfo.join('\n')}`, 
+        (err) => {
+        if (err)
+          console.error(err);
+      });
+    })
+    .catch(console.error);
+}
+
 // DEBUG:
 // console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
 
@@ -187,61 +248,8 @@ switch (usrCmd) {
     break;
   case 'spotify-this-song':
     // ASSERT: User wants details for a particular song/tune.
+    spotifyThis();
 
-    // Format the name of the tune for query to Spotify API.
-    let tune = (searchTerms.length > 0) ? '' : 'The Sign';
-    
-    _.forEach(searchTerms, (word) => {
-      tune += `${_.capitalize(word)} `;
-    });
-
-    tune = _.trimEnd(tune, ' ');
-
-    spotify
-      .search({ type: 'track', query: tune })
-      .then((res) => {
-        // DEBUG:
-        // console.log(res);
-
-        const tunesData = res.tracks;
-        let tunesInfo = [];
-
-        _.forEach(tunesData.items, (song) => {
-          tunesInfo.push(
-            '----------------------------------------------------------------------\n' +
-            `Artist(s): ${song.artists[0].name}\n` +
-            `Song: ${song.name}\n` +
-            `Preview: ${song.preview_url}\n` +
-            `Album: ${song.album.name}`
-          );
-        });          
-
-        let userMsg = '';
-
-        if (tunesInfo.length > 0) {
-          userMsg = `\nFollowing are the matches Spotify found for "${tune}":\n`;
-          tunesInfo.push('----------------------------------------------------------------------\n');
-        }
-        else {
-          userMsg = `Spotify has no matches for "${tune}". =[`
-        }
-  
-        // Output result(s) to user.
-        console.log(userMsg);
-
-        _.forEach(tunesInfo, (song) => {
-          console.log(song);
-        });
-
-        // Output result(s) to log file.
-        fs.appendFile('log.txt', 
-          `\n${userMsg}\n${tunesInfo.join('\n')}`, 
-          (err) => {
-          if (err)
-            console.error(err);
-        });
-      })
-      .catch(console.error);
     break;
   case 'do-what-it-says':
     fs.readFile('random.txt', 'utf8', (err, data) => {
