@@ -10,6 +10,8 @@ const _ = require('lodash'),
       usrCmd = process.argv[2],
       searchTerms = process.argv.slice(3);
 
+let queryURL = '';
+
 // DEBUG:
 console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
 
@@ -32,7 +34,7 @@ switch (usrCmd) {
     artistProperName = _.trimEnd(artistProperName, ' ');
     
     // Create query URL, and get data from Bandsintown
-    const queryURL = `https://rest.bandsintown.com/artists/${artist}/events?app_id=codingbootcamp`;
+    queryURL = `https://rest.bandsintown.com/artists/${artist}/events?app_id=codingbootcamp`;
 
     axios.get(queryURL)
       .then((res) => {
@@ -80,10 +82,114 @@ switch (usrCmd) {
 
     break;
   case 'movie-this':
-    console.log('UNDER CONSTRUCTION');
+    // ASSERT: User wants details for a particular movie.
+
+    // Set the maximum number of results to return
+    const numMovies = 25;
+
+    // Format the name of the movie for query to OMDB API.
+    let movie = (searchTerms.length > 0) ? '' : 'Mr.+Nobody',
+        movieProperName = '';
+    
+    _.forEach(searchTerms, (term) => {
+      let partialName = _.capitalize(term);
+
+      movie += `${partialName}+`;
+      movieProperName += `${partialName} `;
+    });
+
+    movie = _.trimEnd(movie, '+');
+    movieProperName = _.trimEnd(movieProperName, ' ');   
+
+    // Create query URL, and get data from Bandsintown
+    queryURL = `http://www.omdbapi.com/?apikey=trilogy&s=${movie}&type=movie&page=${numMovies}`;
+
+    async function queryMovieDB() {
+      let movieInfo = [];
+
+      await axios.get(queryURL)
+        .then((res) => {
+          // DEBUG:
+          // console.log(res);
+
+          const movieData = res.data.Search;        
+          // console.log(movieData);
+          
+          _.forEach(movieData, (movie) => {
+            let movieIDQueryURL = `http://www.omdbapi.com/?apikey=trilogy&i=${movie.imdbID}`;
+
+
+            axios.get(movieIDQueryURL)
+              .then((res) => {
+                // DEBUG:
+                // console.log(res);
+
+                let release = res.data;
+
+                console.log(release.Title);
+
+                movieInfo.push(
+                  '--------------------------------------------------\n' +
+                  `Movie Title: ${release.Title}\n` +
+                  `Year Released: ${release.Year}\n` +
+                  `IMDb Rating: ${release.imdbRating}\n` +
+                  `Rotten Tomatoes Rating: ${release.Ratings}\n` +
+                  `Production Country: ${release.Country}\n` +
+                  `Primary Language: ${release.Language}\n` +
+                  `Plot: ${release.Plot}\n` +
+                  `Actors: ${release.Actors}\n`
+                );
+
+                console.log(`movieInfo has ${movieInfo.length} elements.`);
+
+              })
+              .catch(console.error)       
+          });
+        });
+
+      return movieInfo;
+    }
+
+    const movies = queryMovieDB();
+
+    console.log(`movieInfo has a total of ${movies.length} elements.`);
+
+    let userMsg = '';
+
+    if (movies.length > 0) {
+      userMsg = `\nFollowing are ${numMovies} releases for ${movieProperName}:\n`;
+      movieInfo.push('--------------------------------------------------\n');
+    }
+    else {
+      userMsg = `I couldn't find any movies entitled *${movieProperName}*. =[`
+    }
+
+    // Output result(s) to user.
+    console.log(userMsg);
+
+    _.forEach(movies, (movie) => {
+      console.log(movie);
+    });
+
+
+
+          /*
+
+        });
+
+        // Output result(s) to log file.
+        fs.appendFile('log.txt', 
+          `\n${userMsg}\n${concertInfo.join('\n')}`, 
+          (err) => {
+          if (err)
+            console.error(err);
+        });
+        */
+
+
     break;
   case 'spotify-this-song':
-    // ASSERT: ...
+    // ASSERT: User wants details for a particular song/tune.
 
     // Format the name of the tune for query to Spotify API.
     let tune = (searchTerms.length > 0) ? '' : 'The Sign';
