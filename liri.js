@@ -16,15 +16,27 @@ let queryURL = '';
 // console.log(`You want to ${usrCmd} for ${searchTerms.join(' ')}!`);
 
 /**************************************************************
-  logOutput()
+  logOutputToFile()
   - Append msg and data to specified file.
  **************************************************************/
-function logOutput(file, msg, data) {
+function logOutputToFile(file, msg, data) {
   fs.appendFile(file, 
     `\n${msg}\n${data}`, 
     (err) => {
     if (err)
       console.error(err);
+  });
+}
+
+/**************************************************************
+  outputResultsToUser()
+  - Display msg and data in human-readable format.
+ **************************************************************/
+function outputResultsToUser(msg, data) {
+  console.log(msg);
+
+  _.forEach(data, (unit) => {
+    console.log(unit);
   });
 }
 
@@ -77,15 +89,9 @@ function concertThis() {
         userMsg = `${artistProperName} has no concerts coming up. =[`
       }
 
-      // Output result(s) to user.
-      console.log(userMsg);
+      outputResultsToUser(userMsg, concertInfo);
 
-      _.forEach(concertInfo, (concert) => {
-        console.log(concert);
-      })
-
-      // Output result(s) to log file.
-      logOutput('log.txt', userMsg, concertInfo.join('\n'));   
+      logOutputToFile('log.txt', userMsg, concertInfo.join('\n'));   
     })
     .catch(console.error);
 }
@@ -161,15 +167,9 @@ function movieThis() {
                 userMsg = `I couldn't find any movies entitled *${movieProperName}*. =[`
               }
           
-              // Output result(s) to user.
-              console.log(userMsg);
-              
-              _.forEach(movieInfo, (movie) => {
-                console.log(movie);
-              });
-
-              // Output result(s) to log file.
-              logOutput('log.txt', userMsg, movieInfo.join('\n'));              
+              outputResultsToUser(userMsg, movieInfo);
+          
+              logOutputToFile('log.txt', userMsg, movieInfo.join('\n'));              
             }
           })
           .catch(console.error)       
@@ -220,15 +220,9 @@ function spotifyThis() {
         userMsg = `Spotify has no matches for "${tune}". =[`
       }
 
-      // Output result(s) to user.
-      console.log(userMsg);
+      outputResultsToUser(userMsg, tunesInfo);
 
-      _.forEach(tunesInfo, (song) => {
-        console.log(song);
-      });
-
-      // Output result(s) to log file.
-      logOutput('log.txt', userMsg, tunesInfo.join('\n'));   
+      logOutputToFile('log.txt', userMsg, tunesInfo.join('\n'));   
     })
     .catch(console.error);
 }
